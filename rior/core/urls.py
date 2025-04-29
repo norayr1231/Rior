@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     ProductListAPIView,
     DesignRequestCreateAPIView,
-    DesignRequestDetailAPIView
+    DesignRequestDetailAPIView,
 )
 
 app_name = 'core'

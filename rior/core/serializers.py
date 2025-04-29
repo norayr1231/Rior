@@ -30,5 +30,4 @@ class DesignRequestResultSerializer(serializers.ModelSerializer):
         return obj.design_image.url if obj.design_image else None
 
     def get_unique_link(self, obj):
-        # adjust domain in production
-        return f"https://your-domain.com/design/{obj.slug}"
+        return f"http://127.0.0.1:8000/api/design-requests/{obj.slug}"

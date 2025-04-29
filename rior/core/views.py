@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -26,7 +27,6 @@ class DesignRequestCreateAPIView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         dr = serializer.save()
 
-        # Call our mock AI
         ai_out = mock_ai_process(
             dr.floor_plan.path,
             dr.door_height,
@@ -35,11 +35,9 @@ class DesignRequestCreateAPIView(generics.GenericAPIView):
         )
 
         dr.ai_response = ai_out
-        # Use floor_plan as placeholder for design image
         dr.design_image = dr.floor_plan
         dr.save()
 
-        # Attach only existing products to avoid FK errors
         product_ids = [p.get('id') for p in ai_out.get('products', [])]
         existing_products = Product.objects.filter(id__in=product_ids)
         dr.products.set(existing_products)
