@@ -10,6 +10,7 @@ test_plan.md
 *.so
 # Distribution / packaging
 .Python
+media/
 build/
 develop-eggs/
 dist/

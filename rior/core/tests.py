@@ -40,7 +40,10 @@ class DesignRequestCreateTests(APITestCase):
             'floor_plan': floor_plan,
             'interior_photo': interior_photo,
             'door_height': 2.0,
-            'ceiling_height': 3.0
+            'ceiling_height': 3.0,
+            'area': 100.0,
+            'wall_area': 40.0,
+            'perimeter': 40.0
         }
         response = self.client.post(url, data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -61,13 +64,55 @@ class DesignRequestDetailTests(APITestCase):
     def setUp(self):
         self.product1 = Product.objects.create(name='Product 1', description='Description 1', price=10.00)
         self.product2 = Product.objects.create(name='Product 2', description='Description 2', price=20.00)
-        floor_plan = SimpleUploadedFile("floor_plan.jpg", b"file_content", content_type="image/jpeg")
-        interior_photo = SimpleUploadedFile("interior_photo.jpg", b"file_content", content_type="image/jpeg")
+        self.product1.related_products.add(self.product2)
+        floor_plan = SimpleUploadedFile("floor_plan.jpg", generate_dummy_image().read(), content_type="image/jpeg")
+        interior_photo = SimpleUploadedFile("interior_photo.jpg", generate_dummy_image().read(), content_type="image/jpeg")
         self.design_request = DesignRequest.objects.create(
             floor_plan=floor_plan,
             interior_photo=interior_photo,
             door_height=2.0,
             ceiling_height=3.0,
+            area=100.0,
+            wall_area=40.0,
+            perimeter=40.0,
+            ai_response={
+                'design_image': '/media/examples/sample_design.png',
+                'products': [
+                    {
+                        'id': self.product1.id,
+                        'name': 'Product 1',
+                        'price': 10.00,
+                        'image': '/media/images/1.jpg',
+                        'similarity_score': 0.85,
+                        'area': 85.5,
+                        'perimeter': 46.3,
+                        'wall_area': 120.0,
+                        'related_products': [
+                            {
+                                'id': self.product2.id,
+                                'name': 'Product 2',
+                                'price': 20.00,
+                                'image': '/media/images/2.jpg'
+                            }
+                        ]
+                    },
+                    {
+                        'id': self.product2.id,
+                        'name': 'Product 2',
+                        'price': 20.00,
+                        'image': '/media/images/2.jpg',
+                        'similarity_score': 0.91,
+                        'related_products': [
+                            {
+                                'id': self.product1.id,
+                                'name': 'Product 1',
+                                'price': 10.00,
+                                'image': '/media/images/1.jpg'
+                            }
+                        ]
+                    }
+                ]
+            }
         )
         self.design_request.products.set([self.product1, self.product2])
         self.design_request.save()
@@ -81,6 +126,15 @@ class DesignRequestDetailTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['slug'], str(self.design_request.slug))
         self.assertEqual(len(response.data['products']), 2)
+        for product in response.data['products']:
+            self.assertIn('related_products', product)
+            self.assertTrue(isinstance(product['related_products'], list))
+            if product['id'] == 1:
+                self.assertEqual(len(product['related_products']), 1)
+                self.assertEqual(product['related_products'][0]['name'], 'Product 2')
+                self.assertEqual(str(product['related_products'][0]['price']), '20.0')
+                self.assertIn('/media/images/2.jpg', product['related_products'][0]['image'])
+                self.assertTrue(product['related_products'][0]['image'].endswith('.jpg'))
 
     def test_get_design_request_invalid_id_nonexistent(self):
         """

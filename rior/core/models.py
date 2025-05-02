@@ -2,12 +2,22 @@ from django.db import models
 from django.db.models import JSONField
 from .utils import generate_slug, image_upload_path
 
+class Category(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    icon = models.ImageField(upload_to="media/static")
+
+    def __str__(self):
+        return self.name
+    
+
 
 class Product(models.Model):
     name        = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     price       = models.DecimalField(max_digits=10, decimal_places=2)
     image       = models.ImageField(upload_to=image_upload_path)
+    related_products = models.ManyToManyField('self', blank=True)
 
     def __str__(self):
         return self.name
@@ -20,6 +30,9 @@ class DesignRequest(models.Model):
     interior_photo = models.ImageField(upload_to=image_upload_path)
     door_height    = models.FloatField()
     ceiling_height = models.FloatField()
+    area           = models.FloatField()
+    wall_area      = models.FloatField()
+    perimeter      = models.FloatField()
     ai_response    = JSONField(blank=True, null=True)
     design_image   = models.ImageField(
         upload_to=image_upload_path,
