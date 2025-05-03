@@ -8,7 +8,8 @@ from .models import Product, DesignRequest
 from .serializers import (
     ProductSerializer,
     DesignRequestCreateSerializer,
-    DesignRequestResultSerializer
+    DesignRequestResultSerializer,
+    DesignRequestListSerializer
 )
 from .utils import mock_ai_process
 
@@ -25,25 +26,37 @@ class DesignRequestCreateAPIView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        dr = serializer.save()
+        data = serializer.validated_data
 
         ai_out = mock_ai_process(
-            dr.floor_plan.path,
-            dr.door_height,
-            dr.ceiling_height,
-            dr.interior_photo.path
+            data['floor_plan'],
+            data['interior_photo'],
+            data['door_height'],
+            data['ceiling_height']
         )
 
-        dr.ai_response = ai_out
-        dr.design_image = dr.floor_plan
-        dr.save()
+        dr = DesignRequest.objects.create(
+            name = data['name'],
+            floor_plan=data['floor_plan'],
+            design_image=data.get('interior_photo'),
+            door_height=data['door_height'],
+            ceiling_height=data['ceiling_height'],
+            area=ai_out.get('area', 0),
+            perimeter=ai_out.get('perimeter', 0),
+            wall_area=ai_out.get('perimeter', 0) * data['ceiling_height'],
+            ai_response=ai_out
+        )
 
         product_ids = [p.get('id') for p in ai_out.get('products', [])]
         existing_products = Product.objects.filter(id__in=product_ids)
         dr.products.set(existing_products)
 
         result_serializer = DesignRequestResultSerializer(dr, context={'request': request})
-        return Response(result_serializer.data, status=status.HTTP_201_CREATED)
+        return Response({
+            'status': 'success',
+            'data': result_serializer.data['slug'],
+            
+        }, status=status.HTTP_201_CREATED)
 
 
 class DesignRequestDetailAPIView(generics.RetrieveAPIView):

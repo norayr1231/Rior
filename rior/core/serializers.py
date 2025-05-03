@@ -1,6 +1,14 @@
 from rest_framework import serializers
 from .models import Product, DesignRequest
 
+class DesignRequestListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DesignRequest
+        fields = [
+            'slug', 'created_at', 'area', 'perimeter',
+            'wall_area', 'door_height', 'ceiling_height'
+        ]
+
 class RelatedProductSerializer(serializers.Serializer):
     id    = serializers.IntegerField()
     name  = serializers.CharField(max_length=200)
@@ -10,7 +18,7 @@ class RelatedProductSerializer(serializers.Serializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'image', 'related_products']
+        fields = ['id', 'name', 'description', 'price', 'image', 'store']
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         request = self.context.get('request')
@@ -37,23 +45,30 @@ class DesignRequestCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DesignRequest
         fields = [
+            'name',
             'floor_plan', 'interior_photo',
             'door_height', 'ceiling_height',
             'area', 'wall_area', 'perimeter'
         ]
 
 class DesignRequestResultSerializer(serializers.ModelSerializer):
-    products         = ProductSerializer(many=True)
+    products         = ProductSerializer(many=True, read_only=True)
+    area             = serializers.ReadOnlyField()
+    perimeter        = serializers.ReadOnlyField()
+    wall_area        = serializers.ReadOnlyField()
     design_image_url = serializers.SerializerMethodField()
     unique_link      = serializers.SerializerMethodField()
 
     class Meta:
         model = DesignRequest
         fields = [
+            'name',
             'slug', 'created_at',
             'design_image_url', 'products', 'unique_link',
-            'area', 'wall_area', 'perimeter'
+            'area', 'perimeter', 'wall_area', 'door_height',
+            'ceiling_height'
         ]
+        read_only_fields = ['area', 'perimeter', 'wall_area', 'created_at', 'slug', 'design_image_url', 'unique_link', 'door_height', 'ceiling_height']
 
     def get_design_image_url(self, obj):
         return obj.design_image.url if obj.design_image else None
