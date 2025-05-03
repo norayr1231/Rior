@@ -16,9 +16,11 @@ class RelatedProductSerializer(serializers.Serializer):
     image = serializers.CharField(max_length=200)
 
 class ProductSerializer(serializers.ModelSerializer):
+    store_name = serializers.SerializerMethodField()
+    store_icon = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'image', 'store']
+        fields = ['id', 'name', 'description', 'price', 'image', 'store_name', 'store_icon']
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         request = self.context.get('request')
@@ -33,13 +35,28 @@ class ProductSerializer(serializers.ModelSerializer):
                         if related_product['id'] == instance.id:
                             related_products = related_product.get('related_products', [])
                             for rp in related_products:
-                                related_products_data.append(rp)
+                                try:
+                                    product_obj = Product.objects.get(id=rp['id'])
+                                    product_data = {
+                                        'id': product_obj.id,
+                                        'name': product_obj.name,
+                                        'price': product_obj.price,
+                                        'store': product_obj.store.name,
+                                        'image': product_obj.image
+                                    }
+                                    related_products_data.append(product_data)
+                                except Product.DoesNotExist:
+                                    continue
                     representation['related_products'] = related_products_data
                 except DesignRequest.DoesNotExist:
                     representation['related_products'] = []
         else:
              representation['related_products'] = []
         return representation
+    def get_store_name(self, obj):
+        return obj.store.name if obj.store else None
+    def get_store_icon(self, obj):
+        return obj.store.logo if obj.store else None
 
 class DesignRequestCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,7 +65,6 @@ class DesignRequestCreateSerializer(serializers.ModelSerializer):
             'name',
             'floor_plan', 'interior_photo',
             'door_height', 'ceiling_height',
-            'area', 'wall_area', 'perimeter'
         ]
 
 class DesignRequestResultSerializer(serializers.ModelSerializer):

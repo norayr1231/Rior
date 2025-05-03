@@ -32,22 +32,6 @@ def mock_ai_process(floor_plan_path, door_h, ceil_h, interior_img_path):
         'products': [
             {
                 'id': 1,
-                'id': 1,
-                'name': 'Product 1',
-                'price': 10.00,
-                'image': '/media/images/1.jpg',
-                'similarity_score': 0.85,
-                'area': 85.5,
-                'perimeter': 46.3,
-                'wall_area': 120.0,
-                'id': 1,                
-                'name': 'Product 1',
-                'price': 10.00,
-                'image': '/media/images/1.jpg',
-                'similarity_score': 0.85,
-                'area': 85.5,
-                'perimeter': 46.3,
-                'wall_area': 120.0,
                 'related_products': [
                     {
                         'id': 2,
