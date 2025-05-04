@@ -3,7 +3,6 @@ import os
 from django.utils.text import slugify
 
 def get_product_ids_from_ai_output(ai_output):
-    """Get all product IDs including related products from AI output."""
     product_ids = set()
     for product in ai_output.get('products', []):
         product_ids.add(product.get('id'))
@@ -15,9 +14,6 @@ def generate_slug():
     return uuid.uuid4().hex[:8]
 
 def image_upload_path(instance, filename):
-    """
-    Distribute files into 100 buckets by first byte of a uuid.
-    """
     ext = os.path.splitext(filename)[1]
     uid = uuid.uuid4().hex
     bucket = int(uid[:2], 16) % 100

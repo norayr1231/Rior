@@ -22,7 +22,7 @@ class Store(models.Model):
     name = models.CharField(max_length=255)
     url = models.URLField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
-    logo = models.CharField(max_length=255, blank=True, null=True)
+    logo = models.ImageField(null=True, blank=True, upload_to=image_upload_path)
 
     def __str__(self):
         return self.name
@@ -45,7 +45,7 @@ class Product(models.Model):
     width_cm = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     length_cm = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     weight_kg = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    image = models.CharField(max_length=255, blank=True, null=True)
+    image = models.ImageField(null=True, upload_to=image_upload_path)
 
     def __str__(self):
         return self.name

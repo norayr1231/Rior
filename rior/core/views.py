@@ -60,6 +60,6 @@ class DesignRequestCreateAPIView(generics.GenericAPIView):
 
 
 class DesignRequestDetailAPIView(generics.RetrieveAPIView):
-    lookup_field     = 'slug'
-    queryset         = DesignRequest.objects.all()
+    lookup_field = 'slug'
+    queryset = DesignRequest.objects.all()
     serializer_class = DesignRequestResultSerializer
